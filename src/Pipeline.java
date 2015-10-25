@@ -54,14 +54,15 @@ public class Pipeline {
 			dcode.step(cycleNo);
 			fetch.step(cycleNo);
 			
+			for(ReservationStation r:resvnStns){
+				r.listenCDB();
+			}
+			
 			for(PipelineBuffer buffer:allBufrs)
 			{
 				buffer.Update();
 			}
 			updatePipelineRegs();
-			
-			//temporary
-			if(cycleNo==10)	done = true;
 		}
 		
 		System.out.println(cycleNo-1);
@@ -78,9 +79,9 @@ public class Pipeline {
 		logFilename = config.getString("Log file");
 		this.config = config;
 		
+		initResvnStns(config);
 		initPipelineUnits(config);
 		initBuffers(config);
-		initResvnStns(config);
 		
 		arf = new ArchitecturalRegisterFile(config);
 		cdb = new CommonDataBus();
@@ -101,7 +102,7 @@ public class Pipeline {
 		int numALUUnits = config.getInt("ALU units");
 		alus = new ALUUnit[numALUUnits];
 		for(int i=0; i<numALUUnits; i++){
-			alus[i] = new ALUUnit(this);
+			alus[i] = new ALUUnit(this, i);
 		}
 		
 		int numFnUnits = numALUUnits+3;	//1 LD, 1 SD, 1 branch
@@ -145,11 +146,11 @@ public class Pipeline {
 		resvnStns = new ReservationStation[numALUUnits + 2];	//one for branch, one for LD/SD
 		
 		for(int i=0; i<numALUUnits; i++){
-			resvnStns[i] = new ReservationStation( config.getInt("ALU reservation station entries"));
+			resvnStns[i] = new ReservationStation(this, config.getInt("ALU reservation station entries"));
 		}
 		
-		resvnStns[numALUUnits] = new ReservationStation( config.getInt("LD/SD reservation station entries"));
-		resvnStns[numALUUnits+1] = new ReservationStation( config.getInt("Branch reservation station entries"));
+		resvnStns[numALUUnits] = new ReservationStation(this, config.getInt("LD/SD reservation station entries"));
+		resvnStns[numALUUnits+1] = new ReservationStation(this, config.getInt("Branch reservation station entries"));
 	}
 	
 	private void initPipelineRegs(){

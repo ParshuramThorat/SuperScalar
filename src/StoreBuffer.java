@@ -5,4 +5,8 @@ public class StoreBuffer extends PipelineBuffer {
 		super(width);
 	}
 
+	public void Add(StoreBufferEntry storeBufferEntry) {
+		super.Add(storeBufferEntry);
+	}
+
 }

@@ -3,6 +3,10 @@ import java.util.HashMap;
 public class CommonDataBus {
 	HashMap<Integer,Short>	entries;
 	
+	public CommonDataBus(){
+		entries = new HashMap<>();
+	}
+	
 	//assuming infinite capacity
 	public void Insert(int tag, short data)
 	{

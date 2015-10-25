@@ -6,7 +6,7 @@ ALU units	1
 
 ALU reservation station entries	3
 Branch reservation station entries	3
-LD/SD reservation station entries	3
+LD/SD reservation station entries	10
 
 Number of architectural registers	16
 

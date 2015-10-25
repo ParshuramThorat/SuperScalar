@@ -32,21 +32,29 @@ public class DecodeUnit extends PipelineUnit {
 			else
 				decoded = decode(newInst);
 			
+			if(decoded.opcode == 5){
+				parent.PCjmp = (short) (decoded.pc + decoded.imm);
+				parent.PCjmpv = true;
+				parent.inStallNew = true;
+				pcs.add(decoded.pc);
+				parent.dcodeBufr.Remove(newInst);
+				break;
+			}
+			else if(decoded.opcode == 6){
+				inserted = parent.dspchBufr.Add(decoded);
+				if(inserted==false)	break;
+				
+				parent.inStallNew = true;
+				pcs.add(decoded.pc);
+				parent.dcodeBufr.Remove(newInst);
+				break;
+			}
+			
 			inserted = parent.dspchBufr.Add(decoded);
 			if(inserted==false)	break;
 			pcs.add(decoded.pc);
 			
 			parent.dcodeBufr.Remove(newInst);
-			if(decoded.opcode == 5){
-				parent.PCjmp = (short) (decoded.pc + decoded.imm);
-				parent.PCjmpv = true;
-				parent.inStallNew = true;
-				break;
-			}
-			else if(decoded.opcode == 6){
-				parent.inStallNew = true;
-				break;
-			}
 		}
 		
 		logSuccess(pcs, cycleNo);
@@ -131,6 +139,8 @@ public class DecodeUnit extends PipelineUnit {
 	
 	private void logSuccess(ArrayList<Short> pcs, int cycleNo)
 	{
+		if(pcs.size()==0)	return;
+		
 		String message="DECODE\t"+cycleNo+"\t";
 		for(short i:pcs){
 			message += i+" ";

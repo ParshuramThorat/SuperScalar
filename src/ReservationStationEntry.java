@@ -6,6 +6,7 @@ public class ReservationStationEntry extends BufferEntry {
 	short pc;
 	boolean ready;
 	boolean id;	//id is true for load and conditional jump
+	int aluType;
 	
 	public ReservationStationEntry()
 	{
@@ -13,5 +14,6 @@ public class ReservationStationEntry extends BufferEntry {
 		operand = new short[2];
 		valid = new boolean[2];
 		ready = false;
+		aluType = -1;
 	}
 }

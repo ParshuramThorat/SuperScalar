@@ -2,10 +2,13 @@
 public class ReservationStation{
 
 	int size;
-	ReservationStationEntry[] entries; 
-	public ReservationStation(int numEntries) {
+	ReservationStationEntry[] entries;
+	Pipeline parent;
+	
+	public ReservationStation(Pipeline parent, int numEntries) {
 		entries = new ReservationStationEntry[numEntries];
 		size = numEntries;
+		this.parent = parent;
 	}
 	
 	public int Add(ReservationStationEntry entry)
@@ -54,6 +57,36 @@ public class ReservationStation{
 			}
 		}
 		return true;
+	}
+	
+	public void listenCDB()
+	{
+		short data;
+		ReservationStationEntry ent;
+		
+		for (int tag:parent.cdb.entries.keySet()){
+			data = parent.cdb.entries.get(tag);
+			
+			for(int i=0; i<size; i++){
+				ent = entries[i];
+				if(ent!=null){
+					if(!ent.valid[0]){
+						if(tag==ent.operand[0]){
+							ent.operand[0] = data;
+							ent.valid[0] = true;
+						}
+					}
+					if(!ent.valid[1]){
+						if(tag==ent.operand[1]){
+							ent.operand[1] = data;
+							ent.valid[1] = true;
+						}
+					}
+					if(ent.valid[0] && ent.valid[1])
+						ent.ready = true;
+				}
+			}
+		}
 	}
 
 }

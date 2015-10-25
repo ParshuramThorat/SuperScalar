@@ -109,6 +109,7 @@ public class DispatchUnit extends PipelineUnit {
 			if(newResEnt.valid[0] && newResEnt.valid[0])
 				newResEnt.ready = true;
 			newResEnt.busy = true;
+			newResEnt.aluType = decoded.opcode;
 			
 			for(int i=0; i<numALUunits; i++){
 				if (!parent.resvnStns[i].isFull()){
@@ -205,6 +206,8 @@ public class DispatchUnit extends PipelineUnit {
 	}
 	
 	private void log(int cycleNo, ArrayList<Integer> dispatched) {
+		if(dispatched.size()==0)	return;
+		
 		String str = "DISPATCH\t"+cycleNo+"\t";
 		for(int num:dispatched)
 			str = str+num+" ";
