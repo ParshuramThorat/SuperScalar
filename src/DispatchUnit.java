@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -17,6 +18,8 @@ public class DispatchUnit extends PipelineUnit {
 		InstructionDecode decoded;
 		HashMap<Short, ARFEntry> arfMap;
 		ArrayList<Integer> dispatched = new ArrayList<>();
+		int tag;
+		ReorderBufferEntry reodrEnt;
 		
 		//check if dispatchable
 		//allocate reorder buffer
@@ -34,10 +37,13 @@ public class DispatchUnit extends PipelineUnit {
 				break;
 			}
 			
-			allocReodrBufr(decoded);
+			reodrEnt = allocReodrBufr(decoded);
 			arfMap = parent.arf.access(decoded);
-			allocResvnStn(decoded, arfMap);
+			tag = allocResvnStn(decoded, arfMap);
+			reodrEnt.tag = tag;
 			dispatched.add((int) decoded.pc);
+			
+			parent.dspchBufr.Remove(entry);
 		}
 
 		log(cycleNo,dispatched);
@@ -102,6 +108,7 @@ public class DispatchUnit extends PipelineUnit {
 			
 			if(newResEnt.valid[0] && newResEnt.valid[0])
 				newResEnt.ready = true;
+			newResEnt.busy = true;
 			
 			for(int i=0; i<numALUunits; i++){
 				if (!parent.resvnStns[i].isFull()){
@@ -110,6 +117,7 @@ public class DispatchUnit extends PipelineUnit {
 					tag = i*maxResSize+position;
 					arfEntry = arfMap.get(decoded.dest);
 					arfEntry.tag = tag;
+					arfEntry.busy = true;
 					return tag;
 				}
 			}
@@ -125,6 +133,7 @@ public class DispatchUnit extends PipelineUnit {
 			tag = numALUunits*maxResSize+position;
 			arfEntry = arfMap.get(decoded.dest);
 			arfEntry.tag = tag;
+			arfEntry.busy = true;
 			newResEnt.id = true;
 			return tag;
 			
@@ -137,6 +146,7 @@ public class DispatchUnit extends PipelineUnit {
 			
 			position = parent.resvnStns[numALUunits].Add(newResEnt);
 			tag = numALUunits*maxResSize+position;
+			newResEnt.id = false;
 			return tag;
 			
 		case 5:	//JMP
@@ -154,7 +164,7 @@ public class DispatchUnit extends PipelineUnit {
 			
 			position = parent.resvnStns[numALUunits+1].Add(newResEnt);
 			tag = (numALUunits+1)*maxResSize+position;
-			newResEnt.id = true;
+			newResEnt.id = false;
 			return tag;
 			
 		case 7:	//HLT
@@ -168,7 +178,6 @@ public class DispatchUnit extends PipelineUnit {
 	private void putRegData(ReservationStationEntry resvEntry, int srcNo, HashMap<Short, ARFEntry> arfMap, InstructionDecode decoded, int pos)
 	{
 		ARFEntry arfEntry;
-		
 		
 		if(srcNo ==0)
 			arfEntry = arfMap.get(decoded.dest);

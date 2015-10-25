@@ -4,13 +4,14 @@ Instruction Cache Size	512
 Width	3
 ALU units	1
 
-ALU reservation station entries	2
-Branch reservation station entries	2
-LD/SD reservation station entries	2
+ALU reservation station entries	3
+Branch reservation station entries	3
+LD/SD reservation station entries	3
 
-Number of architectural registers	8
+Number of architectural registers	16
 
 Log file	logs/log.txt
 Assembly file	asms/asm.txt
 
 Max reservation station size	100
+Reorder buffer entries	15

@@ -129,9 +129,10 @@ public class Pipeline {
 	 */
 	private void initBuffers(Configuration config) {
 		int width = config.getInt("Width");
+		int reodrNum = config.getInt("Reorder buffer entries");
 		dcodeBufr = new DecodeBuffer(width);
 		dspchBufr = new DispatchBuffer(width);
-		reodrBufr = new ReorderBuffer(width);
+		reodrBufr = new ReorderBuffer(reodrNum);
 		storeBufr = new StoreBuffer(width);
 		allBufrs = new PipelineBuffer[] {dcodeBufr, dspchBufr, reodrBufr, storeBufr};
 	}

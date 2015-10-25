@@ -11,10 +11,13 @@ public class LoadUnit extends PipelineUnit {
 	@Override
 	public void step(int cycleNo) {
 		// TODO Auto-generated method stub
-//		for (ReservationStation r:parent.resvnStns){
-//			r.entries = new 
-//		}
-//		
+		//currently just clearing
+		for (ReservationStation r:parent.resvnStns){
+			ReservationStationEntry[] arr = r.entries;
+			for (int i=0; i< arr.length; i++)
+				arr[i]=null;
+		}
+		
 //		parent.dspchBufr.entries.clear();
 	}
 	
