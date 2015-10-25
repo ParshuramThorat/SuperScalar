@@ -1,9 +1,11 @@
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 
 public class Pipeline {
 	String logFilename;
 	Configuration config;
 	
-	PipelineUnit[] units; //all stages, functional units, register files
+	PipelineUnit[] units; //all stages, functional units
 	FetchUnit fetch;
 	DecodeUnit dcode;
 	DispatchUnit dspch;
@@ -28,20 +30,52 @@ public class Pipeline {
 	ArchitecturalRegisterFile arf;
 	RenameRegisterFile rrf;
 	
+	short PC;
+	short PCnew;
+	short PCjmp;
+	short PCcjp;
+	boolean PCjmpv;	//valid for PCjmp
+	boolean PCcjpv;
+	boolean inStallNew;
+	boolean inStall;
+	
+	boolean done;
+	PrintWriter logWriter;
+	
 	public void run() {
-		fetch.step();
-		dcode.step();
-		dspch.step();
-		for (PipelineUnit fnUnit:fnUnits){
-			fnUnit.step();
+		int cycleNo;
+		for(cycleNo=0; !done; cycleNo++){
+			retire.step(cycleNo);
+			cmplet.step(cycleNo);
+			for (PipelineUnit fnUnit:fnUnits){
+				fnUnit.step(cycleNo);
+			}
+			dspch.step(cycleNo);
+			dcode.step(cycleNo);
+			fetch.step(cycleNo);
+			
+			for(PipelineBuffer buffer:allBufrs)
+			{
+				buffer.Update();
+			}
+			updatePipelineRegs();
+			
+			//temporary
+			if(cycleNo==10)	done = true;
 		}
-		cmplet.step();
-		retire.step();
+		
+		System.out.println(cycleNo-1);
+		logWriter.close();
 	}
 	
-	public Pipeline(String logFilename, Configuration config)
+	private void updatePipelineRegs() {
+		PC = PCnew;
+		inStall = inStallNew;
+	}
+
+	public Pipeline(Configuration config) throws FileNotFoundException
 	{
-		this.logFilename = logFilename;
+		logFilename = config.getString("Log file");
 		this.config = config;
 		
 		initPipelineUnits(config);
@@ -50,20 +84,24 @@ public class Pipeline {
 		
 		arf = new ArchitecturalRegisterFile(config);
 		cdb = new CommonDataBus();
+		initPipelineRegs();
+		
+		done = false;
+		logWriter = new PrintWriter(logFilename);
 	}
 
 	/**
 	 * @param config
 	 */
 	private void initPipelineUnits(Configuration config) {
-		load = new LoadUnit();
-		store = new StoreUnit();
-		branch = new BranchUnit();
+		load = new LoadUnit(this);
+		store = new StoreUnit(this);
+		branch = new BranchUnit(this);
 		
 		int numALUUnits = config.getInt("ALU units");
 		alus = new ALUUnit[numALUUnits];
 		for(int i=0; i<numALUUnits; i++){
-			alus[i] = new ALUUnit();
+			alus[i] = new ALUUnit(this);
 		}
 		
 		int numFnUnits = numALUUnits+3;	//1 LD, 1 SD, 1 branch
@@ -73,11 +111,11 @@ public class Pipeline {
 		
 		
 		int width = config.getInt("Width");
-		fetch = new FetchUnit(width);
-		dcode = new DecodeUnit(width);
-		dspch = new DispatchUnit(width);
-		cmplet = new CompleteUnit(width);
-		retire = new RetireUnit(width);
+		fetch = new FetchUnit(this, width);
+		dcode = new DecodeUnit(this, width);
+		dspch = new DispatchUnit(this, width);
+		cmplet = new CompleteUnit(this, width);
+		retire = new RetireUnit(this, width);
 		
 		int totalUnits = numFnUnits+5;	//5 stages
 		units = new PipelineUnit[totalUnits];
@@ -113,4 +151,14 @@ public class Pipeline {
 		resvnStns[numALUUnits+1] = new ReservationStation( config.getInt("Branch reservation station entries"));
 	}
 	
+	private void initPipelineRegs(){
+		PC = 0;
+		PCnew = 0;
+		PCcjp = -1;
+		PCjmp = -1;
+		PCjmpv = false;
+		PCcjpv = false;
+		inStallNew = false;
+		inStall = false;
+	}
 }

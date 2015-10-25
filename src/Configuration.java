@@ -35,4 +35,15 @@ public class Configuration {
 			return null;
 		}
 	}
+	
+	public String getString(String param)
+	{
+		if(dictionary.containsKey(param)){
+			String str = dictionary.get(param);
+			return str;
+		}
+		else{
+			return null;
+		}
+	}
 }

@@ -12,8 +12,6 @@ public class Processor {
 	public static short[] D$;	//the data cache
 	public static String[] I$;	//the instruction cache
 	public static String[] asmInsts;
-	public short[] ARF;
-	public short[] RRF;
 	public static Configuration config;
 	static Pipeline pipeline;
 	
@@ -25,7 +23,7 @@ public class Processor {
 	public static void main(String[] args) throws IOException {
 		initialize(args);
 		fillInstructionCache(args[0]);
-		asmInsts = ASMConverter.convertAll(I$, args[2]);
+		asmInsts = ASMConverter.convertAll(I$, config);
 		pipeline.run();
 		//TODO: GUIpost stuff
 		
@@ -35,7 +33,7 @@ public class Processor {
 	{
 		//TODO: GUIpre stuff
 		config = new Configuration();
-		pipeline = new Pipeline(args[1], config);
+		pipeline = new Pipeline(config);
 		D$ = new short[config.getInt("Data Cache size")];
 		
 	}

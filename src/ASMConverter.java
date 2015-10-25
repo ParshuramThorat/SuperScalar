@@ -2,9 +2,11 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 
 public class ASMConverter {
-	public static String[] convertAll(String[] I$, String asmFile) throws FileNotFoundException{
+	public static String[] convertAll(String[] I$, Configuration config) throws FileNotFoundException{
 		String bin;
 		String asmStr;
+		String asmFile = config.getString("Assembly file");
+		
 		String[] asmInsts = new String[I$.length];
 		PrintWriter asm = new PrintWriter(asmFile);
 		

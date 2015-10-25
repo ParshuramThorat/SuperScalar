@@ -4,4 +4,9 @@ public class DispatchBuffer extends PipelineBuffer {
 	{
 		super(width);
 	}
+	
+	public boolean Add(InstructionDecode decoded)
+	{
+		return super.Add(new DispatchBufferEntry(decoded));
+	}
 }

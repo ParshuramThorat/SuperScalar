@@ -1,4 +1,11 @@
 
 public abstract class PipelineUnit {
-	public abstract void step(); 
+	protected Pipeline parent;
+	
+	public abstract void step(int cycleNo);
+	
+	public PipelineUnit(Pipeline parent)
+	{
+		this.parent = parent;
+	}
 }

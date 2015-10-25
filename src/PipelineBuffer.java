@@ -14,14 +14,33 @@ public abstract class PipelineBuffer {
 		deletns = new ArrayList<BufferEntry>();
 	}
 	
-	public int Add(BufferEntry entry)
+	public boolean Add(BufferEntry entry)
 	{
+		//TODO: deletions will always be 0
 		if(entries.size() + additns.size() - deletns.size() >= size){
-			return 0;
+			return false;
 		}
 		else{
 			additns.add(entry);
-			return 1;
+			return true;
+		}
+	}
+	
+	public BufferEntry GetHead()
+	{
+		if(entries.isEmpty())
+			return null;
+		else
+			return entries.get(0);
+	}
+	
+	public BufferEntry Get(int index)
+	{
+		try{
+			return entries.get(index);
+		}
+		catch (IndexOutOfBoundsException e){
+			return null;
 		}
 	}
 	

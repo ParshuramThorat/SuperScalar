@@ -9,3 +9,6 @@ Branch reservation station entries	2
 LD/SD reservation station entries	2
 
 Number of architectural registers	8
+
+Log file	logs/log.txt
+Assembly file	asms/asm.txt
