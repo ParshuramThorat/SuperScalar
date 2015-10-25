@@ -63,6 +63,7 @@ public class DecodeUnit extends PipelineUnit {
 		case 5:	//JMP
 //			parent.PCnew = (short) (decoded.pc + string2cShort(inStr.substring(4, 12)));
 //			parent.inStallNew = true;
+			decoded.immv = true;
 			decoded.imm = (short) string2cShort(inStr.substring(4, 12));
 			break;
 

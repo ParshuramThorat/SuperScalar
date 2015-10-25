@@ -16,7 +16,6 @@ public abstract class PipelineBuffer {
 	
 	public boolean Add(BufferEntry entry)
 	{
-		//TODO: deletions will always be 0
 		if(entries.size() + additns.size() - deletns.size() >= size){
 			return false;
 		}
@@ -24,14 +23,6 @@ public abstract class PipelineBuffer {
 			additns.add(entry);
 			return true;
 		}
-	}
-	
-	public BufferEntry GetHead()
-	{
-		if(entries.isEmpty())
-			return null;
-		else
-			return entries.get(0);
 	}
 	
 	public BufferEntry Get(int index)
@@ -55,5 +46,11 @@ public abstract class PipelineBuffer {
 		entries.addAll(additns);
 		additns.clear();
 		deletns.clear();
+	}
+	
+	public boolean isFull()
+	{
+		if(size > entries.size())	return false;
+		else						return true;
 	}
 }
