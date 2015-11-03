@@ -12,7 +12,6 @@ public class RetireUnit extends PipelineUnit {
 		this.parent = parent;
 	}
 
-	//TODO: rethink correctness of termination
 	@Override
 	public void step(int cycleNo) {
 		StoreBufferEntry ent = null;
@@ -28,6 +27,9 @@ public class RetireUnit extends PipelineUnit {
 			} catch (Exception e) {
 			}
 			
+			if(parent.storeBufr.deletns.contains(ent))
+				break;
+			
 			if(ent==null){
 				sbfrSize = bufr.entries.size();
 				continue;
@@ -38,7 +40,7 @@ public class RetireUnit extends PipelineUnit {
 			
 			Processor.D$[ent.address] = ent.data;
 			retired.add(ent.pc);
-			bufr.entries.remove(ent);
+			bufr.Remove(ent);
 			i--;
 			retNo++;
 			sbfrSize = bufr.entries.size();

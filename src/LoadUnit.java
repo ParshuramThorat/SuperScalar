@@ -28,20 +28,55 @@ public class LoadUnit extends PipelineUnit {
 		if(ent.id){	//it is load
 			if(ent.ready){
 				address = ent.operand[0];
-				data = Processor.D$[address];
+				
+				//check if address exists in store buffer
+				if(storBufrHas(address))
+					data = loadForward(address);
+//					return;
+				else
+					data = Processor.D$[address];
+				
 				writeReordrBufr(data, ent.pc);
 				parent.cdb.Insert(ent.pc, data);
 				loaded.add(ent.pc);
 				resn.Remove(ent);
-			}
-			else{
-				//TODO:load forwarding
 			}
 		}
 			
 		log(loaded, cycleNo);
 	}
 	
+	private boolean storBufrHas(short address) {
+		StoreBufferEntry e;
+		short bufrAdd;
+		for(BufferEntry f: parent.storeBufr.entries){
+			e = (StoreBufferEntry) f;
+			bufrAdd = e.address;
+			if(bufrAdd == address)
+				return true;
+		}
+		return false;
+	}
+	
+	private short loadForward(short address){
+		StoreBufferEntry e;
+		short bufrAdd;
+		Short pcMax = -1;
+		StoreBufferEntry maxE = null;
+		
+		for(BufferEntry f: parent.storeBufr.entries){
+			e = (StoreBufferEntry) f;
+			bufrAdd = e.address;
+			if(bufrAdd == address){
+				if(e.pc>pcMax){
+					pcMax = e.pc;
+					maxE = e;
+				}
+			}
+		}
+		return maxE.data;
+	}
+
 	private void writeReordrBufr(short data, short pc) {
 		ReorderBufferEntry curr;
 		
