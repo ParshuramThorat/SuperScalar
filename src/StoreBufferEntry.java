@@ -8,5 +8,6 @@ public class StoreBufferEntry extends BufferEntry{
 	{
 		this.address = address;
 		this.data = data;
+		this.pc = pc;
 	}
 }

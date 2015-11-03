@@ -24,17 +24,13 @@ public class LoadUnit extends PipelineUnit {
 		}
 		ReservationStationEntry ent = resn.entries[minIndex];
 		short data; short address;
-		int outtag;
-		int intag;
 		
 		if(ent.id){	//it is load
 			if(ent.ready){
 				address = ent.operand[0];
 				data = Processor.D$[address];
-				int maxResNo = parent.config.getInt("Max reservation station size");
-				outtag = numALUunits*maxResNo + minIndex;
-				writeReordrBufr(data, outtag, ent.pc);
-				parent.cdb.Insert(outtag, data);
+				writeReordrBufr(data, ent.pc);
+				parent.cdb.Insert(ent.pc, data);
 				loaded.add(ent.pc);
 				resn.Remove(ent);
 			}
@@ -46,14 +42,13 @@ public class LoadUnit extends PipelineUnit {
 		log(loaded, cycleNo);
 	}
 	
-	private void writeReordrBufr(short data, int tag, short pc) {
+	private void writeReordrBufr(short data, short pc) {
 		ReorderBufferEntry curr;
 		
 		for(BufferEntry ent:parent.reodrBufr.entries){
 			curr = (ReorderBufferEntry)	ent;
 			if(curr.pc == pc){
 				curr.finished = true;
-				curr.tag = tag;
 				curr.data = data;
 				break;
 			}
@@ -85,6 +80,9 @@ public class LoadUnit extends PipelineUnit {
 		for (int num:loaded){
 			str += num + " ";
 		}
-		parent.logWriter.write(str+"\n");
+		str+="\n";
+		
+		parent.logWriter.write(str);
+		parent.logStr+=str;
 	}
 }

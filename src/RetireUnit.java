@@ -5,36 +5,52 @@ public class RetireUnit extends PipelineUnit {
 	Pipeline parent;
 	StoreBuffer bufr;
 	
-	public RetireUnit(Pipeline parent, int width)
+	public RetireUnit(Pipeline parent)
 	{
 		super(parent);
-		this.width = width;
+		this.width = parent.config.getInt("Retire width");
 		this.parent = parent;
 	}
 
+	//TODO: rethink correctness of termination
 	@Override
 	public void step(int cycleNo) {
-		StoreBufferEntry ent;
+		StoreBufferEntry ent = null;
 		bufr = parent.storeBufr;
 		ArrayList<Short> retired = new ArrayList<>();
 		ReorderBufferEntry r;
+		int sbfrSize = Integer.MAX_VALUE;
+		int retNo=0;
 		
-		if(parent.reodrBufr.entries.size()==1){
-			parent.done = true;
-			return;
-		}
+		for(int i=0; i<sbfrSize && retNo<=width; i++){
+			try {
+				ent = (StoreBufferEntry) bufr.Get(i);
+			} catch (Exception e) {
+			}
 			
-		
-		for(int i=0; i<width; i++){
-			ent = (StoreBufferEntry) bufr.Get(i);
-			if(ent==null)	continue;
+			if(ent==null){
+				sbfrSize = bufr.entries.size();
+				continue;
+			}
+			
+			if(!parent.allCompltd.contains(ent.pc))
+				break;	//not yet completed
+			
 			Processor.D$[ent.address] = ent.data;
-			retired.add((short) i);
+			retired.add(ent.pc);
+			bufr.entries.remove(ent);
+			i--;
+			retNo++;
+			sbfrSize = bufr.entries.size();
 		}
-		
-		for(int i=0; i<width; i++){
-			ent = (StoreBufferEntry) bufr.Get(i);
-			bufr.Remove(ent);
+
+		//look for scope of packing
+		if(retNo<width && parent.reodrBufr.entries.size()==1){
+			r = (ReorderBufferEntry) parent.reodrBufr.Get(0);
+			if(r.pc == Processor.I$.length-1){
+				parent.done = true;
+				retired.add(r.pc);
+			}
 		}
 		
 		log(retired, cycleNo);
@@ -50,8 +66,8 @@ public class RetireUnit extends PipelineUnit {
 		for (int num:retired){
 			str += num + " ";
 		}
-		parent.logWriter.write(str+"\n");
+		str += "\n";
+		parent.logWriter.write(str);
+		parent.logStr+=str;
 	}
-
-
 }

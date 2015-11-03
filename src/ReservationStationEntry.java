@@ -15,5 +15,6 @@ public class ReservationStationEntry extends BufferEntry {
 		valid = new boolean[2];
 		ready = false;
 		aluType = -1;
+		pc = -1;
 	}
 }

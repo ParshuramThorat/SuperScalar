@@ -1,5 +1,6 @@
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 public class Pipeline {
 	String logFilename;
@@ -21,7 +22,9 @@ public class Pipeline {
 	DecodeBuffer dcodeBufr;
 	DispatchBuffer dspchBufr;
 	ReorderBuffer reodrBufr;
+	ArrayList<Short> allCompltd;
 	StoreBuffer storeBufr;
+	RetireBuffer retirBufr;
 	
 	CommonDataBus cdb;
 	
@@ -41,8 +44,11 @@ public class Pipeline {
 	
 	boolean done;
 	PrintWriter logWriter;
+	String logStr;
 	
-	public void run() {
+	public void run() throws FileNotFoundException {
+		String regs;
+		
 		int cycleNo;
 		for(cycleNo=0; !done; cycleNo++){
 			retire.step(cycleNo);
@@ -57,21 +63,47 @@ public class Pipeline {
 			for(ReservationStation r:resvnStns){
 				r.listenCDB();
 			}
+			cdb.Clear();
 			
 			for(PipelineBuffer buffer:allBufrs)
 			{
 				buffer.Update();
 			}
 			updatePipelineRegs();
+			
+			regs = getRegs();
+			if(cycleNo==100)	break;
 		}
 		
 		System.out.println(cycleNo-1);
+		putRegs();
 		logWriter.close();
 	}
 	
 	private void updatePipelineRegs() {
 		PC = PCnew;
 		inStall = inStallNew;
+	}
+	
+	private void putRegs() throws FileNotFoundException {
+		String str="";
+		for(int i=0; i<config.getInt("Number of architectural registers"); i++){
+			str += i+"\t"+arf.entries[i].data+"\n";
+		}
+		
+		String fname = config.getString("Register values");
+		PrintWriter regFile = new PrintWriter(fname);
+		
+		regFile.write(str);
+		regFile.close();
+	}
+	
+	private String getRegs(){
+		String str="";
+		for(int i=0; i<config.getInt("Number of architectural registers"); i++){
+			str += i+"\t"+arf.entries[i].data+"\n";
+		}
+		return str;
 	}
 
 	public Pipeline(Configuration config) throws FileNotFoundException
@@ -89,6 +121,7 @@ public class Pipeline {
 		
 		done = false;
 		logWriter = new PrintWriter(logFilename);
+		logStr = "";
 	}
 
 	/**
@@ -116,7 +149,7 @@ public class Pipeline {
 		dcode = new DecodeUnit(this, width);
 		dspch = new DispatchUnit(this, width);
 		cmplet = new CompleteUnit(this, width);
-		retire = new RetireUnit(this, width);
+		retire = new RetireUnit(this);
 		
 		int totalUnits = numFnUnits+5;	//5 stages
 		units = new PipelineUnit[totalUnits];
@@ -134,8 +167,10 @@ public class Pipeline {
 		dcodeBufr = new DecodeBuffer(width);
 		dspchBufr = new DispatchBuffer(width);
 		reodrBufr = new ReorderBuffer(reodrNum);
+		allCompltd = new ArrayList<>();
 		storeBufr = new StoreBuffer(width);
-		allBufrs = new PipelineBuffer[] {dcodeBufr, dspchBufr, reodrBufr, storeBufr};
+		retirBufr = new RetireBuffer();
+		allBufrs = new PipelineBuffer[] {dcodeBufr, dspchBufr, reodrBufr, storeBufr, retirBufr};
 	}
 
 	/**

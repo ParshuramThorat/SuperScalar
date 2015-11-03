@@ -1,12 +1,12 @@
 
 public class ARFEntry extends BufferEntry{
 	boolean busy;
-	int tag;
+	int pcTag;
 	short data;
 	
 	ARFEntry(short initialValue){
 		busy = false;
-		tag = 0;
+		pcTag = -1;
 		data = initialValue;
 	}
 }

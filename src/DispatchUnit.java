@@ -18,7 +18,6 @@ public class DispatchUnit extends PipelineUnit {
 		InstructionDecode decoded;
 		HashMap<Short, ARFEntry> arfMap;
 		ArrayList<Integer> dispatched = new ArrayList<>();
-		int tag;
 		ReorderBufferEntry reodrEnt;
 		
 		//check if dispatchable
@@ -39,8 +38,7 @@ public class DispatchUnit extends PipelineUnit {
 			
 			reodrEnt = allocReodrBufr(decoded);
 			arfMap = parent.arf.access(decoded);
-			tag = allocResvnStn(decoded, arfMap);
-			reodrEnt.tag = tag;
+			allocResvnStn(decoded, arfMap);
 			dispatched.add((int) decoded.pc);
 			
 			parent.dspchBufr.Remove(entry);
@@ -83,21 +81,21 @@ public class DispatchUnit extends PipelineUnit {
 	private ReorderBufferEntry allocReodrBufr(InstructionDecode decoded)
 	{
 		ReorderBufferEntry reodrEntry = new ReorderBufferEntry();
-		if(decoded.pc==7)	reodrEntry.finished = true;
-		else				reodrEntry.finished = false;
+		if(decoded.pc==(Processor.I$.length-1))
+			reodrEntry.finished = true;
+		else
+			reodrEntry.finished = false;
 		reodrEntry.pc = decoded.pc;
 		parent.reodrBufr.Add(reodrEntry);
 		return reodrEntry;
 	}
 	
-	private int allocResvnStn(InstructionDecode decoded, HashMap<Short, ARFEntry> arfMap)
+	private void allocResvnStn(InstructionDecode decoded, HashMap<Short, ARFEntry> arfMap)
 	{
 		int numALUunits = parent.config.getInt("ALU units");
 		ReservationStationEntry newResEnt = new ReservationStationEntry();
 		ARFEntry arfEntry;
 		int position;
-		int tag;
-		int maxResSize = parent.config.getInt("Max reservation station size");
 		newResEnt.pc = decoded.pc;
 		
 		switch(decoded.opcode)
@@ -115,11 +113,10 @@ public class DispatchUnit extends PipelineUnit {
 				if (!parent.resvnStns[i].isFull()){
 					//will definitely come inside atleast once
 					position = parent.resvnStns[i].Add(newResEnt);
-					tag = i*maxResSize+position;
 					arfEntry = arfMap.get(decoded.dest);
-					arfEntry.tag = tag;
+					arfEntry.pcTag = decoded.pc;
 					arfEntry.busy = true;
-					return tag;
+					return;
 				}
 			}
 			break;
@@ -131,12 +128,11 @@ public class DispatchUnit extends PipelineUnit {
 				newResEnt.ready = true;
 			
 			position = parent.resvnStns[numALUunits].Add(newResEnt);
-			tag = numALUunits*maxResSize+position;
 			arfEntry = arfMap.get(decoded.dest);
-			arfEntry.tag = tag;
+			arfEntry.pcTag = decoded.pc;
 			arfEntry.busy = true;
 			newResEnt.id = true;
-			return tag;
+			return;
 			
 		case 4:	//SD
 			putRegData(newResEnt, 0, arfMap, decoded, 0);
@@ -146,34 +142,31 @@ public class DispatchUnit extends PipelineUnit {
 				newResEnt.ready = true;
 			
 			position = parent.resvnStns[numALUunits].Add(newResEnt);
-			tag = numALUunits*maxResSize+position;
 			newResEnt.id = false;
-			return tag;
+			return;
 			
 		case 5:	//JMP
 			putRegData(newResEnt, 2, arfMap, decoded, 0);
 			newResEnt.ready = true;
 			
 			position = parent.resvnStns[numALUunits+1].Add(newResEnt);
-			tag = (numALUunits+1)*maxResSize+position;
 			newResEnt.id = true;
-			return tag;
+			return;
 			
 		case 6:	//BEQZ
 			putRegData(newResEnt, 1, arfMap, decoded, 0);
 			putRegData(newResEnt, 2, arfMap, decoded, 1);
 			
 			position = parent.resvnStns[numALUunits+1].Add(newResEnt);
-			tag = (numALUunits+1)*maxResSize+position;
 			newResEnt.id = false;
-			return tag;
+			return;
 			
 		case 7:	//HLT
-			return -1;
+			return;
 			
 		}
 		
-		return -2;
+		return;
 	}
 	
 	private void putRegData(ReservationStationEntry resvEntry, int srcNo, HashMap<Short, ARFEntry> arfMap, InstructionDecode decoded, int pos)
@@ -197,7 +190,7 @@ public class DispatchUnit extends PipelineUnit {
 		
 		if(arfEntry.busy){
 			resvEntry.valid[pos] = false;
-			resvEntry.operand[pos] = (short) arfEntry.tag;
+			resvEntry.operand[pos] = (short) arfEntry.pcTag;
 		}
 		else{
 			resvEntry.valid[pos] = true;
@@ -211,6 +204,9 @@ public class DispatchUnit extends PipelineUnit {
 		String str = "DISPATCH\t"+cycleNo+"\t";
 		for(int num:dispatched)
 			str = str+num+" ";
-		parent.logWriter.write(str+"\n");
+		str+="\n";
+		parent.logWriter.write(str);
+		parent.logStr += str;
+		
 	}
 }

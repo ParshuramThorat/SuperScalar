@@ -22,16 +22,6 @@ public class ReservationStation{
 		return -1;
 	}
 	
-//	public BufferEntry Get(int index)
-//	{
-//		try{
-//			return entries.get(index);
-//		}
-//		catch (IndexOutOfBoundsException e){
-//			return null;
-//		}
-//	}
-	
 	public void Remove(ReservationStationEntry entry)
 	{
 		for(int i=0; i<size; i++){
@@ -40,14 +30,6 @@ public class ReservationStation{
 			}
 		}
 	}
-	
-//	public void Update()
-//	{
-//		entries.removeAll(deletns);
-//		entries.addAll(additns);
-//		additns.clear();
-//		deletns.clear();
-//	}
 	
 	public boolean isFull()
 	{
@@ -64,20 +46,20 @@ public class ReservationStation{
 		short data;
 		ReservationStationEntry ent;
 		
-		for (int tag:parent.cdb.entries.keySet()){
-			data = parent.cdb.entries.get(tag);
+		for (short cdbPC:parent.cdb.entries.keySet()){
+			data = parent.cdb.entries.get(cdbPC);
 			
 			for(int i=0; i<size; i++){
 				ent = entries[i];
 				if(ent!=null){
 					if(!ent.valid[0]){
-						if(tag==ent.operand[0]){
+						if(cdbPC==ent.operand[0]){	//operand bits contain pc when valid is 0
 							ent.operand[0] = data;
 							ent.valid[0] = true;
 						}
 					}
 					if(!ent.valid[1]){
-						if(tag==ent.operand[1]){
+						if(cdbPC==ent.operand[1]){
 							ent.operand[1] = data;
 							ent.valid[1] = true;
 						}

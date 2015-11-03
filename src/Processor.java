@@ -15,12 +15,7 @@ public class Processor {
 	public static Configuration config;
 	static Pipeline pipeline;
 	
-	/*
-	 * args[0]	instructions file
-	 * args[1]	log file
-	 * args[2]	asm file
-	 */
-	public static void main(String[] args) throws IOException {
+		public static void main(String[] args) throws IOException {
 		initialize(args);
 		fillInstructionCache(args[0]);
 		asmInsts = ASMConverter.convertAll(I$, config);

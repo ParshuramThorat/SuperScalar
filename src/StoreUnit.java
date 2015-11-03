@@ -24,15 +24,12 @@ public class StoreUnit extends PipelineUnit {
 		}
 		ReservationStationEntry ent = resn.entries[minIndex];
 		short data; short address;
-		int tag;
 		
 		if(ent.id==false){	//it is store
 			if(ent.ready){
 				address = ent.operand[0];
 				data = ent.operand[1];
-				int maxResNo = parent.config.getInt("Max reservation station size");
-				tag = numALUunits*maxResNo + minIndex;
-				writeReordrBufr(data, tag, ent.pc);
+				writeReordrBufr(data, ent.pc);
 				//TODO: assumed store buffer size as global width
 				parent.storeBufr.Add(new StoreBufferEntry(address, data, ent.pc));
 				stored.add(ent.pc);
@@ -43,14 +40,13 @@ public class StoreUnit extends PipelineUnit {
 		log(stored, cycleNo);
 	}
 	
-	private void writeReordrBufr(short data, int tag, short pc) {
+	private void writeReordrBufr(short data, short pc) {
 		ReorderBufferEntry curr;
 		
 		for(BufferEntry ent:parent.reodrBufr.entries){
 			curr = (ReorderBufferEntry)	ent;
 			if(curr.pc == pc){
 				curr.finished = true;
-				curr.tag = -10;//tag;
 				curr.data = data;
 				break;
 			}
@@ -82,7 +78,10 @@ public class StoreUnit extends PipelineUnit {
 		for (int num:stored){
 			str += num + " ";
 		}
-		parent.logWriter.write(str+"\n");
+		str+="\n";
+		
+		parent.logWriter.write(str);
+		parent.logStr += str;
 	}
 
 }

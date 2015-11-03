@@ -32,7 +32,7 @@ public class DecodeUnit extends PipelineUnit {
 			else
 				decoded = decode(newInst);
 			
-			if(decoded.opcode == 5){
+			if(decoded.opcode == 5){	//JMP
 				parent.PCjmp = (short) (decoded.pc + decoded.imm);
 				parent.PCjmpv = true;
 				parent.inStallNew = true;
@@ -145,12 +145,16 @@ public class DecodeUnit extends PipelineUnit {
 		for(short i:pcs){
 			message += i+" ";
 		}
+		message+="\n";
 		
-		parent.logWriter.write(message+"\n");
+		parent.logWriter.write(message);
+		parent.logStr += message;
 	}
 	
 	private void logFailure(int cycleNo)
 	{
-		parent.logWriter.write("DECODE\t"+cycleNo+"\tSTALL\n");
+		String str = "DECODE\t"+cycleNo+"\tSTALL\n";
+		parent.logWriter.write(str);
+		parent.logStr += str;
 	}
 }

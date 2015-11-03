@@ -27,15 +27,19 @@ public class BranchUnit extends PipelineUnit {
 			regNo = ent.operand[0];
 			offset = ent.operand[1];
 			
-			if(regNo==0){
-				parent.PCcjp = (short) (pc+offset);
-				parent.PCcjpv = true;
+			if(ent.ready){
+				if(regNo==0){
+					parent.PCcjp = (short) (pc+offset);
+					parent.PCcjpv = true;
+				}
+				else{
+					parent.PCcjp = (short) (pc+1);
+					parent.PCcjpv = true;
+				}
+				
+				writeReordrBufr((short) -1, pc);
+				resn.Remove(ent);
 			}
-			else{
-				parent.PCcjp = pc;
-				parent.PCcjpv = true;
-			}
-			resn.Remove(ent);
 		}
 		
 		log(cycleNo, pc);
@@ -57,13 +61,29 @@ public class BranchUnit extends PipelineUnit {
 		
 		return minIndex;
 	}
+	
+	private void writeReordrBufr(short data, short pc) {
+		ReorderBufferEntry curr;
+		
+		for(BufferEntry ent:parent.reodrBufr.entries){
+			curr = (ReorderBufferEntry)	ent;
+			if(curr.pc == pc){
+				curr.finished = true;
+				curr.data = data;
+				break;
+			}
+		}
+	}
 
 	private void log(int cycleNo, short pc)
 	{
 		if(pc==-1){
 			//parent.logWriter.write("BRANCH\t"+cycleNo+"\n");
 		}
-		else
-			parent.logWriter.write("BRANCH\t"+cycleNo+"\t"+pc+"\n");
+		else{
+			String message = "BRANCH\t"+cycleNo+"\t"+pc+"\n";
+			parent.logWriter.write(message);
+			parent.logStr+=message;
+		}
 	}
 }

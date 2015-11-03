@@ -19,21 +19,18 @@ public class ALUUnit extends PipelineUnit {
 		if(index!=-1){
 			ReservationStationEntry ent = resn.entries[index];
 			short data=-1;
-			short tag;
 			
 			switch(ent.aluType){
 			case 0:	//add
-				data = (short) (ent.operand[0]+ent.operand[1]);
+				data = (short) (ent.operand[0]+ent.operand[1]);	break;
 			case 1:
-				data = (short) (ent.operand[0]-ent.operand[1]);
+				data = (short) (ent.operand[0]-ent.operand[1]);	break;
 			case 2:
-				data = (short) (ent.operand[0]*ent.operand[1]);
+				data = (short) (ent.operand[0]*ent.operand[1]);	break;
 			}
 			
-			int maxResNo = parent.config.getInt("Max reservation station size");
-			tag = (short) (unitNo*maxResNo+index);
-			writeReordrBufr(data, tag, ent.pc);
-			parent.cdb.Insert(tag, data);
+			writeReordrBufr(data, ent.pc);
+			parent.cdb.Insert(ent.pc, data);
 			log(cycleNo, ent.pc);
 			resn.Remove(ent);
 		}
@@ -60,14 +57,13 @@ public class ALUUnit extends PipelineUnit {
 		return minIndex;
 	}
 
-	private void writeReordrBufr(short data, int tag, short pc) {
+	private void writeReordrBufr(short data, short pc) {
 		ReorderBufferEntry curr;
 		
 		for(BufferEntry ent:parent.reodrBufr.entries){
 			curr = (ReorderBufferEntry)	ent;
 			if(curr.pc == pc){
 				curr.finished = true;
-				curr.tag = tag;
 				curr.data = data;
 				break;
 			}
@@ -79,7 +75,10 @@ public class ALUUnit extends PipelineUnit {
 		if(pc==-1){
 		//	parent.logWriter.write("ALU"+unitNo+"\t"+cycleNo+"\n");
 		}
-		else
-			parent.logWriter.write("ALU"+unitNo+"\t"+cycleNo+"\t"+pc+"\n");
+		else{
+			String message = "ALU"+unitNo+"\t"+cycleNo+"\t"+pc+"\n";
+			parent.logWriter.write(message);
+			parent.logStr+=message;
+		}
 	}
 }

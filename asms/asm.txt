@@ -1,6 +1,0 @@
-0	LD R1 [R7]
-1	LD R2 [R8]
-2	LD R3 [R9]
-3	LD R4 [R10]
-4	ADD R1 R1 R1
-5	HLT 

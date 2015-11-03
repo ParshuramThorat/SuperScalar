@@ -27,6 +27,7 @@ public class FetchUnit extends PipelineUnit {
 					parent.PCnew = parent.PCjmp;
 					parent.PCjmpv = false;
 					parent.inStallNew = false;
+					flushed = false;
 				}
 				return;
 			}
@@ -39,6 +40,7 @@ public class FetchUnit extends PipelineUnit {
 					parent.PCnew = parent.PCcjp;
 					parent.PCcjpv = false;
 					parent.inStallNew = false;
+					flushed = false;
 				}
 				
 				return;
@@ -66,15 +68,23 @@ public class FetchUnit extends PipelineUnit {
 	private void logFail(int cycleNo, String message) {
 		String str="FETCH\t"+cycleNo+"\t" + message + "\n";
 		parent.logWriter.write(str);
+		parent.logStr+=str;
 	}
 
 	private void logFetch(int lastInsNo, int cycleNo)
 	{
 		String message="FETCH\t"+cycleNo+"\t";
+		boolean fetched = false;
+		
 		for(int i=parent.PC; i<=lastInsNo; i++){
 			message += i+" ";
+			fetched = true;
 		}
+		message+="\n";
 		
-		parent.logWriter.write(message+"\n");
+		if(fetched == true){
+			parent.logWriter.write(message);
+			parent.logStr += message;
+		}
 	}
 }
